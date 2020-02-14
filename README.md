@@ -1,2 +1,4 @@
 # filbert
-Automated document organization 
+Automated document organization
+
+By Vince Lanzillotta 
