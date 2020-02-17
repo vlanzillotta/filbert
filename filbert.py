@@ -1,6 +1,7 @@
 import sys
 import time
 import logging
+import click
 import textract
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -11,18 +12,25 @@ import shutil
 from ocrmypdf.api import ocr
 from ocrmypdf.exceptions import PriorOcrFoundError
 
+
+test_rule = {
+    "regex": "Items\s*(\w*)\s(\d*),\s(\d*) -",
+    "new_file": "~/Documents/chiro/(3)/(1)-(2)-(3).pdf"
+}
+
 class ChangeHandler(FileSystemEventHandler):
     def on_modified(self, event):
         pass
         # print(f'event type: {event.event_type}  path : {event.src_path}')
 
     def on_created(self, event):
-        print(f'event type: {event.event_type}  path : {event.src_path}')
+        process_file(event.src_path)
 
-        if ".pdf" in event.src_path:
-            rename_pdf_file(event.src_path)
-        else:
-            print("not a pdf, do nothing")
+def process_file(file_path):
+    if ".pdf" in file_path:
+            rename_pdf_file(file_path)
+    else:
+        print("not a pdf, do nothing...for now")
 
             
 def rename_pdf_file(file_path):
@@ -39,10 +47,7 @@ def rename_pdf_file(file_path):
     
     print("text:", text)
 
-    test_rule = {
-        "regex": "Items\s*(\w*)\s(\d*),\s(\d*) -",
-        "new_file": "~/Documents/chiro/(3)/(1)-(2)-(3).pdf"
-    }
+    
 
     match = re.search(test_rule["regex"], text)
 
@@ -60,23 +65,39 @@ def rename_pdf_file(file_path):
 
     shutil.copy(file_path, new_file)
 
-
-
-
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    path = sys.argv[1] if len(sys.argv) > 1 else '.'
+def run_as_service(directory_path, configfile):
     event_handler = ChangeHandler()
     observer = Observer()
-    observer.schedule(event_handler, path, recursive=False)
-    observer.start()
+    observer.schedule(event_handler, directory_path, recursive=False)
+    try:
+        observer.start()
+    except Exception as ex:
+        print("error staring the scheduler")
+        print(ex)
+        return False
+    
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
+    print("running as service")
+
+@click.command()
+@click.argument('directory_path')
+@click.option('--service', '-s', is_flag=True)
+@click.option('--configfile', '-c')
+def run(directory_path="", service=False, configfile=""):
+
+    if service:
+        run_as_service(directory_path, configfile)
+
+    
+
+    print("exiting")
+
+
+if __name__ == "__main__":
+    run()
+   
