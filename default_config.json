@@ -1,0 +1,22 @@
+{
+    "rules": [
+        {
+            "files": ".*pdf",
+            "contains": ".*\\s(\\w+)\\s(\\d*),\\s(\\d{4}).*GoodHands",
+            "action": "rename",
+            "new_file": "~/Documents/processed/chiro/(3)/(1)-(2)-(3).pdf"
+        },
+        {
+            "files": ".*pdf",
+            "contains": ".*GoodHands.*",
+            "action": "rename",
+            "new_file": "~/Documents/processed/unorganized-chiro/"
+        },
+        {
+            "files": ".*pdf",
+            "contains": ".*BACK\\sIN\\sBALANCE.*",
+            "action": "rename",
+            "new_file": "~/Documents/processed/unorganized-chiro/"
+        }
+    ]
+}
